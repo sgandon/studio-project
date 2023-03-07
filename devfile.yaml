@@ -1,0 +1,40 @@
+schemaVersion: 2.2.0
+metadata:
+  description: 'Talend Studio project'
+  displayName: Talend Studio project
+  #icon: https://raw.githubusercontent.com/devfile-samples/devfile-stack-icons/main/golang.svg
+  name: talend-studio-project
+  projectType: Talend Studio
+  provider: Talend
+  language: Talend Studio
+  tags:
+    - GoTalend
+  version: 1.0.0
+  components:
+  - container:
+      image: nginx
+      sourceMapping: /projects
+      memoryLimit: 256Mi
+      memoryRequest: 128Mi
+      cpuLimit: 400m
+      cpuRequest: 100m
+      endpoints:
+        - name: main
+          attributes:
+            discoverable: true
+            type: main
+            #urlRewriteSupported: true #this open https://192.168.49.2.nip.io/workspace33430124dfe24025/talend-studio/80/ instead of direct ingress definition https://workspace33430124dfe24025-192.168.49.2.nip.io/
+          targetPort: 8080
+          exposure: public
+          protocol: tcp
+    name: nginx
+    attributes: 
+      pod-overrides:
+        spec:
+          securityContext:
+            runAsNonRoot: false
+      container-overrides: 
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+        imagePullPolicy: IfNotPresent
