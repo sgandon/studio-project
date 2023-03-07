@@ -1,40 +1,55 @@
 schemaVersion: 2.2.0
 metadata:
-  description: 'Talend Studio project'
-  displayName: Talend Studio project
-  #icon: https://raw.githubusercontent.com/devfile-samples/devfile-stack-icons/main/golang.svg
-  name: talend-studio-project
-  projectType: Talend Studio
-  provider: Talend
-  language: Talend Studio
+  name: go
+  displayName: Go Runtime
+  description: 'Go is an open source programming language that makes it easy to build simple, reliable, and efficient software.'
+  icon: https://raw.githubusercontent.com/devfile-samples/devfile-stack-icons/main/golang.svg
+  language: Go
+  projectType: Go
   tags:
-    - GoTalend
-  version: 1.0.0
-  components:
-  - container:
-      image: nginx
-      sourceMapping: /projects
-      memoryLimit: 256Mi
-      memoryRequest: 128Mi
-      cpuLimit: 400m
-      cpuRequest: 100m
+    - Go
+  version: 1.1.0
+  provider: Red Hat
+  supportUrl: https://github.com/devfile-samples/devfile-support#support-information
+  attributes:
+    alpha.dockerimage-port: 8081
+parent:
+  id: go
+  registryUrl: 'https://registry.devfile.io'
+components:
+  - name: image-build
+    image:
+      imageName: go-image:latest
+      dockerfile:
+        uri: docker/Dockerfile
+        buildContext: .
+        rootRequired: false
+  - name: kubernetes-deploy
+    attributes:
+      deployment/replicas: 1
+      deployment/cpuLimit: '100m'
+      deployment/cpuRequest: 10m
+      deployment/memoryLimit: 100Mi
+      deployment/memoryRequest: 10Mi
+      deployment/container-port: 8081
+    kubernetes:
+      uri: deploy.yaml
       endpoints:
-        - name: main
-          attributes:
-            discoverable: true
-            type: main
-            #urlRewriteSupported: true #this open https://192.168.49.2.nip.io/workspace33430124dfe24025/talend-studio/80/ instead of direct ingress definition https://workspace33430124dfe24025-192.168.49.2.nip.io/
-          targetPort: 8080
-          exposure: public
-          protocol: tcp
-    name: nginx
-    attributes: 
-      pod-overrides:
-        spec:
-          securityContext:
-            runAsNonRoot: false
-      container-overrides: 
-        securityContext:
-          runAsUser: 0
-          runAsGroup: 0
-        imagePullPolicy: IfNotPresent
+      - name: http-8081
+        targetPort: 8081
+        path: /
+commands:
+  - id: build-image
+    apply:
+      component: image-build
+  - id: deployk8s
+    apply:
+      component: kubernetes-deploy
+  - id: deploy
+    composite:
+      commands:
+        - build-image
+        - deployk8s
+      group:
+        kind: deploy
+        isDefault: true
